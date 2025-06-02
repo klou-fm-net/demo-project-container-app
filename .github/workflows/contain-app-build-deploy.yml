@@ -3,10 +3,11 @@ name: Container Build and Deployment
 on:
   push:
     branches: [ main ]
+  workflow_dispatch:  # Manual trigger 
 env:
   AWS_REGION: us-east-2
   ECR_REPO: kevin-container-app
-  CLUSTER_NAME: MyEksCluster83497DF9-d7bccadcdc68439d8195c05e8d3d0cc1
+  CLUSTER_NAME: MyEksCluster83497DF9-987273be1bb2401394b8291c28c22cc7
 
 jobs:
   deploy:
