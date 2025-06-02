@@ -1,0 +1,59 @@
+name: Container Build and Deployment
+
+on:
+  push:
+    branches: [ main ]
+env:
+  AWS_REGION: us-east-2
+  ECR_REPO: kevin-container-app
+  CLUSTER_NAME: MyEksCluster83497DF9-d7bccadcdc68439d8195c05e8d3d0cc1
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v3
+
+    - name: Configure AWS credentials
+      uses: aws-actions/configure-aws-credentials@v2
+      with:
+        aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+        aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+        aws-region: us-east-2
+
+    - name: Login to Amazon ECR
+      id: login-ecr
+      uses: aws-actions/amazon-ecr-login@v1
+
+    # - name: Build, tag, and push image to ECR
+    #   run: |
+    #     IMAGE_URI="600627331586.dkr.ecr.us-east-2.amazonaws.com/kevin-container-app:latest"
+    #     docker build -t $IMAGE_URI .
+    #     docker push $IMAGE_URI
+
+    - name: IAM entity
+      run: aws sts get-caller-identity
+
+    - name: Deploy to EKS
+      run: |
+        aws sts get-caller-identity
+        aws eks update-kubeconfig --region $AWS_REGION --name $CLUSTER_NAME
+        kubectl apply -f k8s/ --validate=false
+
+    - name: Wait for LoadBalancer External IP
+      id: get-svc
+      run: |
+        echo "Waiting for external IP..."
+        for i in {1..20}; do
+          EXTERNAL_IP=$(kubectl get svc my-app-service -n default -o jsonpath='{.status.loadBalancer.ingress[0].hostname}')
+          if [[ -n "$EXTERNAL_IP" ]]; then
+            echo "EXTERNAL_IP=$EXTERNAL_IP" >> $GITHUB_OUTPUT
+            break
+          fi
+          sleep 10
+        done
+
+    - name: Print Service URL
+      run: echo "Service is available at http://${{ steps.get-svc.outputs.EXTERNAL_IP }}"       
