@@ -7,7 +7,7 @@ on:
 env:
   AWS_REGION: us-east-2
   ECR_REPO: kevin-container-app
-  CLUSTER_NAME: MyEksCluster83497DF9-0fcbb6eae1584df8922624155f51a7ca
+  CLUSTER_NAME: MyEksCluster83497DF9-73eeace629254bf387734af250c1f697
 
 jobs:
   deploy:
